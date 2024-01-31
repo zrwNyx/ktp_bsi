@@ -3,8 +3,11 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:ktp_03/datasource.dart';
+import 'package:ktp_03/detail.dart';
+import 'package:ktp_03/entities.dart';
 import 'package:ktp_03/repositories.dart';
 import 'package:ktp_03/widget.dart';
+import 'package:ktp_03/usecase.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,11 +26,15 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Daftar KTP',
+      initialRoute: '/',
+      routes: {
+        '/': (context) => HomePage(),
+        '/second': (context) => DetailPage(),
+      },
       theme: ThemeData(
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: const HomePage(),
     );
   }
 }
@@ -76,9 +83,9 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  void _deleteUser(int index) {
-    final usersBox = Hive.box('users');
-    usersBox.deleteAt(index);
+  void delete(int index) {
+    var _box = Hive.box('users');
+    _box.deleteAt(index);
     setState(() {});
   }
 
@@ -186,7 +193,7 @@ class _HomePageState extends State<HomePage> {
                   hint: Text('Pilih Kota'),
                   onChanged: (String? newValue) {
                     setState(() {
-                      selectedProvince = newValue!;
+                      selectedCities = newValue!;
                     });
                   },
                   items: cities.map((String value) {
@@ -216,11 +223,26 @@ class _HomePageState extends State<HomePage> {
                     final user = usersBox.getAt(index);
                     return ListTile(
                       title: Text(user['name']),
+                      onTap: () {
+                        List<Person> persons = [
+                          Person(
+                            nama: user['name'],
+                            tempatLahir: user['birthPlace'],
+                            pekerjaan: user['occupation'],
+                            pendidikan: user['education'],
+                            provinsi: user['province'],
+                            kota: user['city'],
+                          ),
+                        ];
+
+                        Navigator.pushNamed(context, '/second',
+                            arguments: persons);
+                      },
                       subtitle: Text(user['province']),
                       trailing: IconButton(
                         icon: const Icon(Icons.delete),
                         onPressed: () {
-                          showMyDialog(context, index, _deleteUser);
+                          showMyDialog(context, index, delete);
                         },
                       ),
                     );
